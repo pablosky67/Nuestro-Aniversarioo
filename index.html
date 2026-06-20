@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R & P // Nuestro Universo</title>
+    <style>
+        :root {
+            --bg-dark: #0d0c12;
+            --panel-bg: rgba(28, 26, 39, 0.65);
+            --neon-pink: #ff79c6;
+            --neon-purple: #bd93f9;
+            --neon-blue: #8be9fd;
+            --neon-green: #50fa7b;
+            --text-light: #f8f8f2;
+            --text-muted: #6272a4;
+            --romantic-pink: #ffb6c1;
+            --romantic-rose: #ff7799;
+            --soft-gold: #ffe4b5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', 'Courier New', Courier, monospace;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        #particles-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           CONTENEDOR DE LA APLICACIÓN
+           ========================================================================== */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 121, 198, 0.2);
+            border-radius: 24px;
+            padding: 25px;
+            z-index: 2;
+            box-shadow: 0 0 40px rgba(189, 147, 249, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: max-width 0.4s ease;
+        }
+
+        .app-container.expanded {
+            max-width: 850px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================================================
+           ESTILOS DE ELEMENTOS COMUNES
+           ========================================================================== */
+        .header {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px rgba(255, 121, 198, 0.5);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            color: var(--neon-purple);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .cover-photo-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+
+        .cover-photo {
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 121, 198, 0.4);
+            box-shadow: 0 0 15px rgba(255, 121, 198, 0.2);
+        }
+
+        .split-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .split-layout {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            .left-column {
+                flex: 1.2;
+                display: flex;
+                flex-direction: column;
+            }
+            .right-column {
+                flex: 0.8;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+
+        .side-photo {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border-radius: 16px;
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 20px rgba(189, 147, 249, 0.3);
+            object-fit: cover;
+        }
+
+        .counter-box {
+            background: rgba(13, 12, 18, 0.8);
+            border: 1px solid rgba(139, 233, 253, 0.2);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .counter-title {
+            font-size: 0.9rem;
+            color: var(--neon-blue);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .counter-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+
+        .time-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-num {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        .time-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-menu {
+            background: rgba(40, 42, 54, 0.7);
+            border: 1px solid var(--neon-purple);
+            color: var(--text-light);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-menu:hover {
+            background: var(--neon-purple);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(189, 147, 249, 0.4);
+            font-weight: bold;
+        }
+
+        .screen-title {
+            font-size: 1.4rem;
+            color: var(--neon-pink);
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--text-muted);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-box {
+            background: rgba(13, 12, 18, 0.7);
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-height: 380px;
+            overflow-y: auto;
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: var(--neon-pink);
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+
+        .card-trigger {
+            background: #282a36;
+            border: 1px solid var(--text-muted);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            width: 100%;
+            text-align: left;
+        }
+
+        .card-trigger:hover {
+            border-color: var(--neon-pink);
+            transform: scale(1.02);
+        }
+
+        /* ==========================================================================
+           TIMELINE Y PLAYLIST
+           ========================================================================== */
+        .timeline-item {
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 2px solid var(--neon-purple);
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '■';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            color: var(--neon-pink);
+            font-size: 0.8rem;
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: var(--neon-blue);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .timeline-text {
+            color: #e0e0e6;
+            text-align: justify;
+        }
+
+        .playlist-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .song-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(40, 42, 54, 0.5);
+            border: 1px solid rgba(139, 233, 253, 0.15);
+            border-radius: 12px;
+            padding: 10px;
+            text-decoration: none;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .song-card:hover {
+            border-color: var(--neon-pink);
+            background: rgba(255, 121, 198, 0.1);
+            transform: translateX(5px);
+        }
+
+        .album-cover {
+            width: 65px;
+            height: 65px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 121, 198, 0.2);
+        }
+
+        .song-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .song-title {
+            font-weight: bold;
+            color: var(--neon-pink);
+            font-size: 0.95rem;
+        }
+
+        .song-album {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        .song-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* ==========================================================================
+           JUEGO: ECO-SISTEMA CAPIBARA
+           ========================================================================== */
+        .tamagotchi-container {
+            background: #111018;
+            border: 2px solid var(--neon-purple);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: inset 0 0 15px rgba(189, 147, 249, 0.2);
+        }
+
+        .vitals-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            width: 75px;
+        }
+
+        .bar-container {
+            flex: 1;
+            background: #282a36;
+            height: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--text-muted);
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 50%;
+            transition: width 0.4s ease, background-color 0.3s ease;
+        }
+
+        #bar-love { background-color: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
+        #bar-energy { background-color: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); }
+        #bar-sync { background-color: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+
+        .stat-val {
+            width: 35px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .display-screen {
+            height: 160px;
+            background: rgba(139, 233, 253, 0.05);
+            border: 1px dashed var(--text-muted);
+            border-radius: 12px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .capi-avatar {
+            font-size: 4rem;
+            user-select: none;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            filter: drop-shadow(0 0 10px rgba(255,121,198,0.2));
+        }
+
+        .capi-avatar.pulse {
+            animation: capiJump 0.4s ease;
+        }
+
+        @keyframes capiJump {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.05); }
+        }
+
+        .floating-heart {
+            position: absolute;
+            color: var(--neon-pink);
+            font-size: 1.5rem;
+            animation: floatUp 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(20px) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+        }
+
+        .game-status-text {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.75rem;
+            color: var(--neon-purple);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .btn-action-game {
+            background: rgba(40, 42, 54, 0.8);
+            border: 1px solid var(--neon-blue);
+            color: var(--text-light);
+            padding: 10px 5px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-action-game:hover:not(:disabled) {
+            background: var(--neon-blue);
+            color: var(--bg-dark);
+            box-shadow: 0 0 10px rgba(139, 233, 253, 0.4);
+            font-weight: bold;
+        }
+
+        .btn-action-game:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: var(--text-muted);
+        }
+
+        /* ==========================================================================
+           JUEGO: TRIVIA INTERACTIVA (MUGOSHA & NOVIO)
+           ========================================================================== */
+        .trivia-container {
+            background: rgba(13, 12, 18, 0.85);
+            border: 1px solid var(--neon-purple);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 0 15px rgba(189,147,249,0.15);
+        }
+
+        .trivia-progress {
+            font-size: 0.75rem;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .trivia-question {
+            font-size: 1.1rem;
+            color: #ffffff;
+            line-height: 1.4;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-option {
+            background: rgba(40, 42, 54, 0.6);
+            border: 1px solid rgba(255,121,198,0.3);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .btn-option:hover {
+            background: rgba(255, 121, 198, 0.1);
+            border-color: var(--neon-pink);
+        }
+
+        .btn-option.correct {
+            background: rgba(80, 250, 123, 0.2) !important;
+            border-color: var(--neon-green) !important;
+            color: var(--neon-green) !important;
+            font-weight: bold;
+        }
+
+        .btn-option.incorrect {
+            background: rgba(255, 85, 85, 0.2) !important;
+            border-color: #ff5555 !important;
+            color: #ff5555 !important;
+        }
+
+        .trivia-score-box {
+            text-align: center;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .score-medal {
+            font-size: 3.5rem;
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* ==========================================================================
+           MAPA DE RECUERDOS (MAPA ESTELAR INTERACTIVO)
+           ========================================================================== */
+        .interactive-map-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: radial-gradient(circle at center, #1b162b 0%, #0d0c12 100%);
+            border: 1px solid rgba(139, 233, 253, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.8);
+        }
+
+        .star-map-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .map-constellation-line {
+            stroke: rgba(139, 233, 253, 0.25);
+            stroke-width: 1.5;
+            stroke-dasharray: 4;
+            animation: dashLine 15s linear infinite;
+        }
+
+        @keyframes dashLine {
+            to { stroke-dashoffset: -100; }
+        }
+
+        .map-pin {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+
+        .map-pin:hover {
+            transform: translate(-50%, -50%) scale(1.3);
+        }
+
+        .pin-glow {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-purple);
+            animation: pulseGlow 1.5s infinite alternate;
+        }
+
+        .map-pin:nth-child(2n) .pin-glow {
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-purple);
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            100% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .pin-label {
+            position: absolute;
+            bottom: -15px;
+            font-size: 0.6rem;
+            color: var(--soft-gold);
+            white-space: nowrap;
+            background: rgba(13, 12, 18, 0.8);
+            padding: 1px 4px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 182, 193, 0.2);
+        }
+
+        .map-popup {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(13, 12, 18, 0.95);
+            border: 1px solid var(--neon-blue);
+            border-radius: 12px;
+            padding: 12px;
+            z-index: 4;
+            font-size: 0.75rem;
+            display: none;
+            animation: slideUp 0.3s ease-out forwards;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            cursor: pointer;
+            color: var(--neon-pink);
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* ==========================================================================
+           MODALES Y DIÁLOGOS
+           ========================================================================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 12, 18, 0.9);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-pink);
+            padding: 25px;
+            border-radius: 16px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(255, 121, 198, 0.3);
+            text-align: center;
+        }
+
+        .modal-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: var(--text-light);
+        }
+
+        .btn-close-modal {
+            background: var(--neon-pink);
+            color: var(--bg-dark);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particles-canvas"></canvas>
+
+    <div id="main-container" class="app-container">
+        
+        <!-- ==========================================================================
+           PANTALLA: MENÚ PRINCIPAL
+           ========================================================================== -->
+        <div id="screen-home" class="screen active">
+            <div class="header">
+                <h1>R & P</h1>
+                <p>NUESTRO ESPACIO // REGINA & PABLO</p>
+            </div>
+
+            <div class="cover-photo-container">
+                <img src="image_663a26.jpg" alt="Regina y Pablo" class="cover-photo">
+            </div>
+
+            <div class="counter-box">
+                <div class="counter-title">⏳ Tiempo Compartido</div>
+                <div class="counter-grid">
+                    <div class="time-unit"><span class="time-num" id="months">02</span><span class="time-label">Meses</span></div>
+                    <div class="time-unit"><span class="time-num" id="days">00</span><span class="time-label">Días</span></div>
+                    <div class="time-unit"><span class="time-num" id="hours">00</span><span class="time-label">Horas</span></div>
+                    <div class="time-unit"><span class="time-num" id="mins">00</span><span class="time-label">Min</span></div>
+                    <div class="time-unit"><span class="time-num" id="secs">00</span><span class="time-label">Seg</span></div>
+                </div>
+            </div>
+
+            <div class="menu-grid">
+                <button class="btn-menu" onclick="navigateTo('screen-letters', true)">
+                    <span>💌 Mensajes Lindos</span><span>→</span>
+                </button>
+                <button class="btn-menu" onclick="navigateTo('screen-gallery', true)">
+                    <span>📸 Bitácora Estelar</span><span>→</span>
+                </button>
+                <button class="btn-menu" onclick="navigateTo('screen-secret', true)">
+                    <span>🔒 Código Secreto</span><span>→</span>
+                </button>
+                <button class="btn-menu" onclick="navigateTo('screen-playlist', true)">
+                    <span>🎵 Playlist Estelar</span><span>→</span>
+                </button>
+                <button class="btn-menu" onclick="initTamagotchi(); navigateTo('screen-game', true)">
+                    <span>🎮 Mini Juego (Capibara)</span><span>→</span>
+                </button>
+                <button class="btn-menu" onclick="initTrivia(); navigateTo('screen-trivia', true)">
+                    <span>💡 Trivia R & P</span><span>→</span>
+                </button>
+                <button class="btn-menu" onclick="navigateTo('screen-map', true)">
+                    <span>🗺️ Mapa de Recuerdos</span><span>→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: MENSAJES LINDOS (CARTAS)
+           ========================================================================== -->
+        <div id="screen-letters" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">💌 Mensajes Lindos</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Abre una carta según cómo te sientas hoy:</p>
+                    
+                    <div class="card-trigger" onclick="openLetter('cuando_me_extrañes')">👉 Cuando me extrañes un poquito...</div>
+                    <div class="card-trigger" onclick="openLetter('cuando_tengas_un_mal_dia')">👉 Cuando necesites una sonrisa...</div>
+                    <div class="card-trigger" onclick="openLetter('cuando_te_sientas_insegura')">👉 Cuando te sientas insecure...</div>
+                    <div class="card-trigger" onclick="openLetter('cuando_sientas_que_no_te_amo')">👉 Cuando sientas que no te amo...</div>
+                    <div class="card-trigger" onclick="openLetter('aniversario')">👉 Por nuestros 2 meses juntos...</div>
+
+                    <button class="btn-back" onclick="navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="mensajes.jpg" alt="Foto Mensajes" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: BITÁCORA / MOMENTOS
+           ========================================================================== -->
+        <div id="screen-gallery" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">📸 Bitácora Estelar</div>
+                    <div class="content-box">
+                        <div class="timeline-item">
+                            <div class="timeline-date">📌 PUNTO DE ORIGEN</div>
+                            <div class="timeline-text">El instante exacto en que nuestros mundos chocaron y todo cambió por completo. Cruzar caminos contigo fue como encontrar la pieza que le faltaba a todo el código de mi vida; a partir de ahí, absolutamente todo empezó a cobrar un sentido nuevo, más brillante y feliz. Qué increíble es mirar atrás y ver cómo un día cualquiera se convirtió en el inicio de la historia más hermosa: el origen de Regina y Pablo.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">🎵 SINTONÍA TOTAL</div>
+                            <div class="timeline-text">Nuestras primeras pláticas eternas, esas canciones compartidas que se volvieron la banda sonora de nuestros días, y descubrir poco a poco que compartíamos el mismo refugio musical. Esa conexión tan bonita donde no hacen falta palabras para entenderse, porque logramos sintonizar en la misma frecuencia exacta, compartiendo gustos, risas, detalles y una complicidad única que solo nos pertenece a los dos.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">🌌 NUESTRO PRESENTE (2 MESES)</div>
+                            <div class="timeline-text">Llegamos a los 60 días recorriendo este camino juntos, llenos de risas compartidas, momentos inolvidables, secretos compartidos y esos apodos tan infinitamente tiernos que me desarman por completo, como decirte mi pinguinita hermosa o mi mugosha consentida. Estos dos meses son la prueba y la certeza absoluta de que quiero seguir sumando días, meses y galaxias enteras a tu lado. ¡Te amo muchísimo!</div>
+                        </div>
+                    </div>
+                    <button class="btn-back" onclick="navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="bitacora.jpg" alt="Foto Bitácora" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: CÓDIGO SECRETO (DATOS DEL SISTEMA)
+           ========================================================================== -->
+        <div id="screen-secret" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">🔒 Datos del Sistema</div>
+                    <div class="content-box">
+                        <p style="color: var(--neon-blue); font-weight: bold; margin-bottom: 8px;">// LOG CENTRAL DE SEGURIDAD:</p>
+                        <p style="text-align: justify; line-height: 1.6; color: #e0e0e6;">
+                           • <strong>Mugosha Favorita:</strong> Registro confirmado. Eres y siempre serás la dueña absoluta de mis sonrisas más honestas, de mis pensamientos diarios y de este cariño gigante que no para de crecer.<br><br>
+                           • <strong>Refugio Espacial:</strong> Has configurado el entorno más perfecto de todos; te has convertido en mi lugar seguro en todo el mundo, el espacio exacto donde puedo ser yo mismo y donde encuentro paz con solo escucharte o tenerte cerca.<br><br>
+                           • <strong>Estado del Sistema:</strong> Amor total inicializado y ejecutándose al 1000000%, protegido contra cualquier error externo y diseñado con un ciclo infinito que se expande a cada segundo que pasa a tu lado.<br><br>
+                           <span style="color: var(--neon-pink); font-style: italic; display: block; text-align: center; margin-top: 10px; font-weight: bold;">
+                           "No importa el desorden ni el caos que haya en el mundo exterior, tú eres mi estructura perfecta, mi equilibrio y mi universo entero."
+                           </span>
+                        </p>
+                    </div>
+                    <button class="btn-back" onclick="navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="secreto.jpg" alt="Foto Código Secreto" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: PLAYLIST ESTELAR (LAS 5 CANCIONES ORIGINALES)
+           ========================================================================== -->
+        <div id="screen-playlist" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">🎵 Playlist Estelar</div>
+                    <div class="content-box" style="max-height: 380px; overflow-y: auto;">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Nuestra sintonía en Spotify (Haz clic para reproducir):</p>
+                        
+                        <div class="playlist-container">
+                            <a href="https://open.spotify.com/intl-es/track/2t1VRDZVjSvcLObYU3Lndy?si=02c6aeb535524d53" target="_blank" class="song-card">
+                                <img src="portada_los_prisioneros.jpg" alt="Te Amo" class="album-cover">
+                                <div class="song-info">
+                                    <span class="song-title">Te Amo</span>
+                                    <span class="song-album">Álbum: Los Prisioneros</span>
+                                    <span class="song-date">Salida: 05/06/2003</span>
+                                </div>
+                            </a>
+
+                            <a href="https://open.spotify.com/intl-es/track/5rohUzwEoRsUvAA1Bf3DLo?si=3ae0bac23eea4221" target="_blank" class="song-card">
+                                <img src="portada_dos_oruguitas.jpg" alt="Dos Oruguitas" class="album-cover">
+                                <div class="song-info">
+                                    <span class="song-title">Dos Oruguitas</span>
+                                    <span class="song-album">Álbum: Encanto (O.S.T.)</span>
+                                    <span class="song-date">Salida: 19/11/2021</span>
+                                </div>
+                            </a>
+
+                            <a href="https://open.spotify.com/intl-es/track/623VpT9A1gM813WvT80L6F" target="_blank" class="song-card">
+                                <img src="portada_miranda.jpg" alt="Lo que siento por ti" class="album-cover">
+                                <div class="song-info">
+                                    <span class="song-title">Lo que siento por ti</span>
+                                    <span class="song-album">Álbum: Miranda es imposible!</span>
+                                    <span class="song-date">Salida: 23/11/2009</span>
+                                </div>
+                            </a>
+
+                            <a href="https://open.spotify.com/intl-es/track/0XyW8cdaOqZgYy6v641fHl" target="_blank" class="song-card">
+                                <img src="portada_reyno.jpg" alt="Química" class="album-cover">
+                                <div class="song-info">
+                                    <span class="song-title">Química</span>
+                                    <span class="song-album">Álbum: Viaje por lo Eterno</span>
+                                    <span class="song-date">Salida: 11/03/2014</span>
+                                </div>
+                            </a>
+
+                            <a href="https://open.spotify.com/intl-es/track/1Z7wF7w6pL8Z9rS8842G2X" target="_blank" class="song-card">
+                                <img src="portada_carla_morrison.jpg" alt="Te Regalo" class="album-cover">
+                                <div class="song-info">
+                                    <span class="song-title">Te Regalo</span>
+                                    <span class="song-album">Álbum: Amor Supremo</span>
+                                    <span class="song-date">Salida: 30/10/2015</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <button class="btn-back" onclick="navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="playlist.jpg" alt="Foto Playlist" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: MINI JUEGO DE CARIÑO (CAPIBARA INTERACTIVO)
+           ========================================================================== -->
+        <div id="screen-game" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">🎮 Conexión Capibara</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Cuiden juntos los hilos de su entorno para llegar al 100% de Sintonía Estelar:</p>
+                    
+                    <div class="tamagotchi-container">
+                        <div class="vitals-panel">
+                            <div class="stat-row">
+                                <span class="stat-label">💖 Cariño:</span>
+                                <div class="bar-container"><div id="bar-love" class="bar-fill"></div></div>
+                                <span id="val-love" class="stat-val">50%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">⚡ Energía:</span>
+                                <div class="bar-container"><div id="bar-energy" class="bar-fill"></div></div>
+                                <span id="val-energy" class="stat-val">50%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">🌌 Sintonía:</span>
+                                <div class="bar-container"><div id="bar-sync" class="bar-fill"></div></div>
+                                <span id="val-sync" class="stat-val">20%</span>
+                            </div>
+                        </div>
+
+                        <div class="display-screen" id="capi-screen">
+                            <div id="capi-char" class="capi-avatar" onclick="interact('click')">🦫</div>
+                            <div id="game-status" class="game-status-text">Esperando acción...</div>
+                        </div>
+
+                        <div class="actions-grid">
+                            <button id="btn-feed" class="btn-action-game" onclick="interact('feed')">
+                                <span>🍪</span><span>Detalles</span>
+                            </button>
+                            <button id="btn-pet" class="btn-action-game" onclick="interact('pet')">
+                                <span>✨</span><span>Mimos</span>
+                            </button>
+                            <button id="btn-music" class="btn-action-game" onclick="interact('music')">
+                                <span>🎵</span><span>Música</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn-back" onclick="destroyTamagotchi(); navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="juego.jpg" alt="Foto Juego" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: TRIVIA R & P (JUEGO INTERACTIVO COMPLETADO)
+           ========================================================================== -->
+        <div id="screen-trivia" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">💡 Trivia R & P</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">¿Qué tan sintonizados están sus recuerdos? Responde las preguntas:</p>
+                    
+                    <div class="trivia-container">
+                        <!-- Bloque de Preguntas -->
+                        <div id="trivia-active-box">
+                            <div class="trivia-progress">
+                                <span id="trivia-current-num">Pregunta 1 de 4</span>
+                                <span id="trivia-running-score">Puntos: 0</span>
+                            </div>
+                            <div id="trivia-question-txt" class="trivia-question">¿Cargando pregunta estelar?</div>
+                            <div id="trivia-options" class="options-grid">
+                                <!-- Botones inyectados dinámicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Bloque de Puntuación Final -->
+                        <div id="trivia-score-box" class="trivia-score-box">
+                            <span class="score-medal">🏆</span>
+                            <h3 style="color: var(--neon-pink); font-size: 1.3rem;">¡Sintonía Evaluada!</h3>
+                            <p id="trivia-score-result-text" style="font-size: 0.9rem; line-height: 1.5; color: #ffffff;">Puntuación de sintonía.</p>
+                            <button class="card-trigger" style="text-align: center; margin-top: 10px;" onclick="initTrivia()">Reiniciar Trivia</button>
+                        </div>
+                    </div>
+                    <button class="btn-back" onclick="navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="trivia.jpg" alt="Foto Trivia" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+           PANTALLA: MAPA DE RECUERDOS (MAPA INTERACTIVO ESTELAR COMPLETADO)
+           ========================================================================== -->
+        <div id="screen-map" class="screen">
+            <div class="split-layout">
+                <div class="left-column">
+                    <div class="screen-title">🗺️ Mapa Estelar de Recuerdos</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Haz clic en los nodos brillantes del mapa estelar para revelar nuestros lugares especiales:</p>
+                    
+                    <div class="interactive-map-container" id="map-container">
+                        <!-- Fondo SVG para unir las constelaciones -->
+                        <svg class="star-map-svg">
+                            <line x1="15%" y1="35%" x2="45%" y2="70%" class="map-constellation-line" />
+                            <line x1="45%" y1="70%" x2="75%" y2="25%" class="map-constellation-line" />
+                            <line x1="75%" y1="25%" x2="82%" y2="60%" class="map-constellation-line" />
+                        </svg>
+
+                        <!-- Pines Interactivos en el mapa -->
+                        <div class="map-pin" style="left: 15%; top: 35%;" onclick="openMapMemory('m_origen')">
+                            <div class="pin-glow"></div>
+                            <span class="pin-label">Punto de Origen</span>
+                        </div>
+
+                        <div class="map-pin" style="left: 45%; top: 70%;" onclick="openMapMemory('m_musica')">
+                            <div class="pin-glow"></div>
+                            <span class="pin-label">El Refugio Musical</span>
+                        </div>
+
+                        <div class="map-pin" style="left: 75%; top: 25%;" onclick="openMapMemory('m_apodos')">
+                            <div class="pin-glow"></div>
+                            <span class="pin-label">Nidos de Apodos</span>
+                        </div>
+
+                        <div class="map-pin" style="left: 82%; top: 60%;" onclick="openMapMemory('m_sesenta')">
+                            <div class="pin-glow"></div>
+                            <span class="pin-label">Estación 60 Días</span>
+                        </div>
+
+                        <!-- Panel de Popup de Recuerdos -->
+                        <div class="map-popup" id="map-popup-window">
+                            <span class="popup-close" onclick="closeMapPopup()">✕</span>
+                            <div id="map-popup-title" style="font-weight: bold; color: var(--neon-pink); margin-bottom: 5px;">Título del Recuerdo</div>
+                            <div id="map-popup-date" style="font-size: 0.65rem; color: var(--neon-blue); margin-bottom: 8px;">Fecha</div>
+                            <div id="map-popup-desc" style="color: #e0e0e6; line-height: 1.4;">Descripción larga de nuestro hermoso momento juntos...</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-back" onclick="navigateTo('screen-home', false)">← Volver al inicio</button>
+                </div>
+                <div class="right-column">
+                    <img src="mapa.jpg" alt="Foto Mapa" class="side-photo">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL FLOTANTE PARA LEER CARTAS -->
+    <div id="letter-modal" class="modal">
+        <div class="modal-content">
+            <div id="modal-text-content" class="modal-text"></div>
+            <button class="btn-close-modal" onclick="closeModal()">Cerrar Ventana</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       LÓGICA LOGICIAL Y COMPORTAMIENTO JAVASCRIPT EXTENDIDO
+       ========================================================================== -->
+    <script>
+        // Control de Navegación entre Pantallas del Ecosistema Virtual
+        function navigateTo(screenId, expandContainer) {
+            const container = document.getElementById('main-container');
+            if (expandContainer) {
+                container.classList.add('expanded');
+            } else {
+                container.classList.remove('expanded');
+            }
+
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Textos Completos de los Fragmentos del Corazón para Regina
+        const cartasRomanticas = {
+            cuando_me_extrañes: "Si estás leyendo esto y no estoy físicamente a tu lado, cierra los ojos un segundo. Recuerda que estás en cada línea de código de mis pensamientos y en cada latido. Eres mi pensamiento favorito de todo el día. 💕 En las noches largas piensa en que bajo el mismo cielo hay alguien que cuenta las horas para volverte a ver, alguien que te cuida desde lejos y guarda tu sonrisa como el tesoro más sagrado.",
+            cuando_tengas_un_mal_dia: "¡Arriba esa sonrisa, Mugosha hermosa! Eres una persona increíblemente fuerte, inteligente y hermosa. No dejes que nada opaque tu luz hoy. Recuerda que aquí está tu novio apoyándote en absolutamente todo. Te amo. ✨🐧 Si las cosas se pusieron pesadas hoy, cierra los ojos un momento y déjame abrazarte con el pensamiento. Estoy inmensamente orgulloso de ti.",
+            cuando_te_sientas_insegura: "Escúchame bien, mi amor: Tú eres absolutamente TODO para mí. No hay una sola duda en mi mente de que eres la persona correcta. Eres hermosa, inteligente y perfecta tal y como eres. Nadie ni nada en este mundo podría jamás quitarte tu lugar en mi vida ni en mi corazón. Estás grabada en mí por completo. 🔒💖 Eres el regalo más bonito que la vida me ha dado.",
+            cuando_sientas_que_no_te_amo: "Si alguna vez tu cabecita te hace dudar, lee esto: Te amo con toda mi vida entera. Eres mi mundo, mi universo y mi constante favorita de todos los días. Mi amor por ti no hace más que crecer y expandirse a cada segundo. Nunca olvides que eres mi lugar seguro y lo más valioso que tengo. 🌌✨ Eres mi hoy, mi mañana y mi siempre.",
+            aniversario: "¡Felices 2 meses, mi amor! Oficialmente llevamos 60 días construyendo un universo propio. Gracias por cada risa, por tu ternura y por ser mi pinguinita hermosa. Esto apenas está comenzando. 🌎🔒 Sesenta días de descubrirnos, de hacernos espacio en la rutina y de darnos cuenta de que estamos hechos para vibrar en la misma hermosa frecuencia."
+        };
+
+        function openLetter(key) {
+            document.getElementById('modal-text-content').innerText = cartasRomanticas[key];
+            document.getElementById('letter-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('letter-modal').style.display = 'none';
+        }
+
+        // Reloj Contador de Tiempo de Precisión Espacial (Aniversario 23 de Junio)
+        const fechaObjetivo = new Date('2026-06-23T00:00:00');
+
+        function actualizarContador() {
+            const ahora = new Date();
+            
+            if (ahora < fechaObjetivo) {
+                document.getElementById('months').innerText = "02";
+                document.getElementById('days').innerText = "00";
+                document.getElementById('hours').innerText = "00";
+                document.getElementById('mins').innerText = "00";
+                document.getElementById('secs').innerText = "00";
+            } else {
+                const diferencia = ahora - fechaObjetivo;
+
+                const segundosTotales = Math.floor(diferencia / 1000);
+                const minutosTotales = Math.floor(segundosTotales / 60);
+                const horasTotales = Math.floor(minutosTotales / 60);
+                const diasTotales = Math.floor(horasTotales / 24);
+
+                document.getElementById('months').innerText = "02";
+                document.getElementById('days').innerText = String(diasTotales % 30).padStart(2, '0');
+                document.getElementById('hours').innerText = String(ahora.getHours()).padStart(2, '0');
+                document.getElementById('mins').innerText = String(ahora.getMinutes()).padStart(2, '0');
+                document.getElementById('secs').innerText = String(ahora.getSeconds()).padStart(2, '0');
+            }
+        }
+        setInterval(actualizarContador, 1000);
+        actualizarContador();
+
+        /* ==========================================================================
+           LÓGICA DEL MINIJUEGO: CONEXIÓN CAPIBARA (TAMAGOTCHI)
+           ========================================================================== */
+        let stats = { love: 50, energy: 50, sync: 20 };
+        let loopInterval = null;
+        let gameFinished = false;
+
+        function initTamagotchi() {
+            stats = { love: 50, energy: 50, sync: 20 };
+            gameFinished = false;
+            document.querySelectorAll('.btn-action-game').forEach(b => b.disabled = false);
+            updateBars();
+            document.getElementById('game-status').innerText = "CONEXIÓN INICIALIZADA";
+            
+            if(loopInterval) clearInterval(loopInterval);
+            loopInterval = setInterval(() => {
+                if(gameFinished) return;
+                stats.love = Math.max(0, stats.love - 3);
+                stats.energy = Math.max(0, stats.energy - 2);
+                updateBars();
+            }, 3000);
+        }
+
+        function destroyTamagotchi() {
+            clearInterval(loopInterval);
+        }
+
+        function updateBars() {
+            document.getElementById('bar-love').style.width = stats.love + '%';
+            document.getElementById('val-love').innerText = stats.love + '%';
+
+            document.getElementById('bar-energy').style.width = stats.energy + '%';
+            document.getElementById('val-energy').innerText = stats.energy + '%';
+
+            document.getElementById('bar-sync').style.width = stats.sync + '%';
+            document.getElementById('val-sync').innerText = stats.sync + '%';
+        }
+
+        function interact(action) {
+            if (gameFinished) return;
+
+            const char = document.getElementById('capi-char');
+            const status = document.getElementById('game-status');
+            
+            char.classList.remove('pulse');
+            void char.offsetWidth; // Truco para reiniciar animación CSS
+            char.classList.add('pulse');
+
+            if (action === 'click') {
+                createHeart('💖');
+                stats.love = Math.min(100, stats.love + 5);
+                status.innerText = "¡REACCIONÓ CON CARIÑO!";
+            } else if (action === 'feed') {
+                createHeart('🍪');
+                stats.energy = Math.min(100, stats.energy + 15);
+                stats.love = Math.min(100, stats.love + 2);
+                status.innerText = "ALIMENTADA CON DETALLES";
+            } else if (action === 'pet') {
+                createHeart('✨');
+                stats.love = Math.min(100, stats.love + 18);
+                stats.energy = Math.max(0, stats.energy - 5);
+                status.innerText = "MIMOS RECIBIDOS CORRECTAMENTE";
+            } else if (action === 'music') {
+                createHeart('🎵');
+                if(stats.energy >= 15 && stats.love >= 40) {
+                    stats.sync = Math.min(100, stats.sync + 20);
+                    stats.energy = Math.max(0, stats.energy - 10);
+                    status.innerText = "¡SINTONIZANDO EN LA MISMA FRECUENCIA!";
+                } else {
+                    status.innerText = "FALTA ENERGÍA O CARIÑO PARA SINTONIZAR";
+                }
+            }
+
+            if(action !== 'click' && action !== 'music') {
+                stats.sync = Math.min(100, stats.sync + 2);
+            }
+
+            updateBars();
+            checkWinCondition();
+        }
+
+        function createHeart(symbol) {
+            const screen = document.getElementById('capi-screen');
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+            heart.innerText = symbol;
+            heart.style.left = (40 + Math.random() * 20) + '%';
+            screen.appendChild(heart);
+            setTimeout(() => heart.remove(), 800);
+        }
+
+        function checkWinCondition() {
+            if (stats.sync >= 100 && stats.love >= 80 && !gameFinished) {
+                gameFinished = true;
+                clearInterval(loopInterval);
+                document.querySelectorAll('.btn-action-game').forEach(b => b.disabled = true);
+                
+                document.getElementById('game-status').innerText = "SINTONÍA TOTAL ALCANZADA";
+                
+                setTimeout(() => {
+                    document.getElementById('modal-text-content').innerHTML = `🌌 <b>¡Nivel de Sintonía: 100%!</b> 🦫<br><br>Has equilibrado con éxito el entorno de nuestro universo. Así como mantuviste estable este pequeño ecosistema, has demostrado que el cuidado diario, los pequeños detalles y la música compartida son lo que nos mantiene en sintonía perfecta.<br><br><span style="color:var(--neon-pink)">"No hay errores en nuestro código, mi pinguinita. Te amo muchísimo."</span>`;
+                    document.getElementById('letter-modal').style.display = 'flex';
+                }, 600);
+            }
+        }
+
+        /* ==========================================================================
+           LÓGICA DEL JUEGO: TRIVIA INTERACTIVA (COMPLETADO)
+           ========================================================================== */
+        const preguntasTrivia = [
+            {
+                pregunta: "¿Cuántos días de risas, secretos y hermosa sintonía celebramos hoy en nuestro espacio?",
+                opciones: ["30 maravillosos días", "60 hermosos días (2 Meses)", "15 días increíbles", "90 días dorados"],
+                correcta: 1,
+                mensajeCorrecto: "¡Exacto! 60 días llenos de complicidad y cariño absoluto. 💖",
+                mensajeIncorrecto: "¡Cerca, pero llevamos exactamente 60 días de pura magia! 🐧"
+            },
+            {
+                pregunta: "¿Cuáles son los apodos infinitamente tiernos que me desarman por completo?",
+                opciones: ["Cuchitura y Mi Cielo", "Mugosha consentida y Pinguinita hermosa", "Gatita y Princesa", "Amorcito y Corazón"],
+                correcta: 1,
+                mensajeCorrecto: "¡Sí! Mis apodos favoritos para la dueña de mis sonrisas. 😍",
+                mensajeIncorrecto: "¡Nooo! Recuerda que eres mi Mugosha consentida y mi Pinguinita hermosa. 🦫"
+            },
+            {
+                pregunta: "¿Cuál de estos artistas canta 'Te Regalo', una de nuestras canciones estelares?",
+                opciones: ["Miranda!", "Los Prisioneros", "Sebastián Yatra", "Carla Morrison"],
+                correcta: 3,
+                mensajeCorrecto: "¡Así es! Carla Morrison con sus hermosos acordes. 🎵",
+                exacta: "Miranda!",
+                mensajeIncorrecto: "¡Nop! Carla Morrison es la voz dulce de 'Te Regalo'. 💫"
+            },
+            {
+                pregunta: "¿Qué significa nuestro código de seguridad en los datos del sistema?",
+                opciones: ["Un juego tecnológico", "Que eres mi refugio y lugar seguro en todo el mundo", "Una simple contraseña", "Un registro de fecha"],
+                correcta: 1,
+                mensajeCorrecto: "¡Correcto! Eres mi lugar seguro ante cualquier caos externo. 🔒",
+                mensajeIncorrecto: "¡Casi! Significa que eres mi refugio perfecto en todo el mundo. 🌌"
+            }
+        ];
+
+        let triviaState = {
+            currentQuestionIdx: 0,
+            score: 0
+        };
+
+        function initTrivia() {
+            triviaState.currentQuestionIdx = 0;
+            triviaState.score = 0;
+            
+            document.getElementById('trivia-active-box').style.display = 'flex';
+            document.getElementById('trivia-score-box').style.display = 'none';
+            
+            loadTriviaQuestion();
+        }
+
+        function loadTriviaQuestion() {
+            const currentQuestion = preguntasTrivia[triviaState.currentQuestionIdx];
+            document.getElementById('trivia-current-num').innerText = `Pregunta ${triviaState.currentQuestionIdx + 1} de ${preguntasTrivia.length}`;
+            document.getElementById('trivia-running-score').innerText = `Puntos: ${triviaState.score}`;
+            document.getElementById('trivia-question-txt').innerText = currentQuestion.pregunta;
+
+            const optionsContainer = document.getElementById('trivia-options');
+            optionsContainer.innerHTML = '';
+
+            currentQuestion.opciones.forEach((opcion, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = opcion;
+                btn.onclick = () => selectTriviaOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectTriviaOption(selectedIdx, btnElement) {
+            const currentQuestion = preguntasTrivia[triviaState.currentQuestionIdx];
+            const buttons = document.querySelectorAll('.btn-option');
+            
+            // Deshabilitar todos los botones para evitar doble clic
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (selectedIdx === currentQuestion.correcta) {
+                btnElement.classList.add('correct');
+                triviaState.score += 25;
+                document.getElementById('trivia-running-score').innerText = `Puntos: ${triviaState.score}`;
+                showTriviaFeedback(currentQuestion.mensajeCorrecto);
+            } else {
+                btnElement.classList.add('incorrect');
+                // Mostrar también cuál era la correcta
+                buttons[currentQuestion.correcta].classList.add('correct');
+                showTriviaFeedback(currentQuestion.mensajeIncorrecto);
+            }
+
+            // Esperar 2.5 segundos y pasar a la siguiente pregunta
+            setTimeout(() => {
+                triviaState.currentQuestionIdx++;
+                if (triviaState.currentQuestionIdx < preguntasTrivia.length) {
+                    loadTriviaQuestion();
+                } else {
+                    finishTrivia();
+                }
+            }, 2500);
+        }
+
+        function showTriviaFeedback(message) {
+            // Reutilizamos el modal flotante para mostrar una retroalimentación dulce y directa
+            openLetterFeedback(message);
+        }
+
+        function openLetterFeedback(text) {
+            document.getElementById('modal-text-content').innerHTML = `<p style="font-style: italic; font-size:1.1rem; color:var(--neon-pink);">${text}</p>`;
+            document.getElementById('letter-modal').style.display = 'flex';
+        }
+
+        function finishTrivia() {
+            document.getElementById('trivia-active-box').style.display = 'none';
+            document.getElementById('trivia-score-box').style.display = 'flex';
+
+            let sintoníaTxt = "";
+            if(triviaState.score === 100) {
+                sintoníaTxt = "¡Sintonía Perfecta (100%)! 🌌 Regina y Pablo están conectados bajo una misma órbita indivisible. Se conocen de manera espectacular y cada recuerdo está grabado perfectamente en el alma. ¡Felicidades, mi Mugosha consentida!";
+            } else if(triviaState.score >= 50) {
+                sintoníaTxt = `Sintonía Alta (${triviaState.score}%). Su conexión es preciosa y resuena con mucha fuerza en su refugio espacial. Sigan coleccionando risas y momentos inolvidables juntos. 💖`;
+            } else {
+                sintoníaTxt = `Sintonía en Calibración (${triviaState.score}%). Es hora de poner de fondo su playlist estelar, contarse sus apodos favoritos y volver a fundirse en su sintonía dulce. 🐧`;
+            }
+
+            document.getElementById('trivia-score-result-text').innerText = sintoníaTxt;
+        }
+
+        /* ==========================================================================
+           LÓGICA DEL MAPA DE RECUERDOS (MAPA INTERACTIVO ESTELAR)
+           ========================================================================== */
+        const recuerdosMapa = {
+            m_origen: {
+                titulo: "📌 Punto de Origen",
+                fecha: "23 de Abril (Inicio de Órbita)",
+                desc: "El instante exacto en que nuestros caminos se cruzaron. Lo que parecía un día cualquiera se convirtió en el nacimiento de la historia más hermosa. Cruzar caminos contigo fue encontrar la pieza del código que le faltaba a mi vida."
+            },
+            m_musica: {
+                titulo: "🎵 El Refugio Musical",
+                fecha: "Nuestra Frecuencia Compartida",
+                desc: "Pláticas eternas unidas por las canciones de Miranda!, Los Prisioneros, Carla Morrison y Reyno. Encontrarnos fue darnos cuenta de que compartíamos el mismo refugio dulce, vibrando bajo la misma sintonía."
+            },
+            m_apodos: {
+                titulo: "✨ Nido de Dulces Apodos",
+                fecha: "Complicidad Diaria",
+                desc: "El nacimiento de esos apodos que me desarman por completo. Decirte 'mi pinguinita hermosa' o 'mi mugosha consentida' es recordarte que tienes un lugar propio y sumamente especial en mi corazón."
+            },
+            m_sesenta: {
+                titulo: "🌌 Estación 60 Días",
+                fecha: "2 Meses Juntos (Presente)",
+                desc: "60 días recorriendo este sendero de la mano. Un presente lleno de certeza absoluta donde cada segundo sumado es la confirmación de que quiero seguir recorriendo galaxias enteras junto a ti. ¡Te amo muchísimo!"
+            }
+        };
+
+        function openMapMemory(key) {
+            const popup = document.getElementById('map-popup-window');
+            const data = recuerdosMapa[key];
+
+            document.getElementById('map-popup-title').innerText = data.titulo;
+            document.getElementById('map-popup-date').innerText = data.fecha;
+            document.getElementById('map-popup-desc').innerText = data.desc;
+
+            popup.style.display = 'block';
+        }
+
+        function closeMapPopup() {
+            document.getElementById('map-popup-window').style.display = 'none';
+        }
+
+        /* ==========================================================================
+           FONDO DE PARTÍCULAS AUTÓNOMO (CORAZONES Y ESTRELLAS)
+           ========================================================================== */
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+                this.type = Math.random() > 0.5 ? 'heart' : 'dot';
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 121, 198, ${this.opacity})`;
+                if (this.type === 'heart') {
+                    ctx.font = `${this.size * 3}px serif`;
+                    ctx.fillText('♥', this.x, this.y);
+                } else {
+                    ctx.fillRect(this.x, this.y, this.size, this.size);
+                }
+            }
+
+            update() {
+                this.y -= this.speed;
+                if (this.y < -20) {
+                    this.y = canvas.height + 20;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        function initParticles() {
+            for (let i = 0; i < 40; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.onload = function () {
+            initParticles();
+            animateParticles();
+            actualizarContador();
+        }
+    </script>
+</body>
+</html>
